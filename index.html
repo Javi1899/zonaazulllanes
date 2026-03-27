@@ -1,783 +1,1008 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Zona Azul Llanes – Semana Santa 2025</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🅿️</text></svg>">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --blue-50: #eff6ff; --blue-100: #dbeafe; --blue-200: #bfdbfe;
-      --blue-400: #60a5fa; --blue-500: #3b82f6; --blue-600: #2563eb;
-      --blue-700: #1d4ed8; --blue-800: #1e40af; --blue-900: #1e3a8a;
-      --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-400: #fbbf24;
-      --amber-500: #f59e0b; --amber-600: #d97706;
-      --green-400: #4ade80; --green-500: #22c55e; --green-600: #16a34a;
-      --red-400: #f87171; --red-500: #ef4444;
-      --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
-      --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280;
-      --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937;
-      --gray-900: #111827;
-    }
-
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: var(--gray-50);
-      color: var(--gray-800);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-
-    /* ===== HERO ===== */
-    .hero {
-      background: linear-gradient(135deg, var(--blue-800) 0%, var(--blue-600) 50%, #3b7dd8 100%);
-      color: white;
-      padding: 2.5rem 1rem 3rem;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: .5rem;
-      background: rgba(255,255,255,.15); backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,.25);
-      padding: .4rem 1rem; border-radius: 50px;
-      font-size: .8rem; font-weight: 500; letter-spacing: .5px;
-      text-transform: uppercase; margin-bottom: 1rem;
-      position: relative;
-    }
-    .hero h1 {
-      font-size: clamp(1.6rem, 5vw, 2.6rem);
-      font-weight: 800; line-height: 1.2;
-      margin-bottom: .5rem; position: relative;
-    }
-    .hero p { font-size: 1rem; opacity: .9; position: relative; max-width: 600px; margin: 0 auto; }
-
-    /* ===== CONTAINER ===== */
-    .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
-
-    /* ===== CLOCK SECTION ===== */
-    .clock-section {
-      margin-top: -2rem;
-      position: relative;
-      z-index: 10;
-      padding: 0 1rem;
-    }
-    .clock-card {
-      max-width: 700px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.12);
-      overflow: hidden;
-      transition: border-color .3s;
-      border: 3px solid var(--gray-300);
-    }
-    .clock-card.active { border-color: var(--green-500); box-shadow: 0 20px 60px rgba(34,197,94,.15); }
-    .clock-card.soon { border-color: var(--amber-500); box-shadow: 0 20px 60px rgba(245,158,11,.15); }
-
-    .clock-inner { padding: 1.5rem 2rem; text-align: center; }
-
-    .clock-date {
-      font-size: .85rem; color: var(--gray-500);
-      text-transform: capitalize; margin-bottom: .5rem;
-      font-weight: 500;
-    }
-    .clock-display {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: clamp(2.8rem, 8vw, 4.5rem);
-      font-weight: 700;
-      letter-spacing: 2px;
-      display: flex; align-items: center; justify-content: center; gap: 2px;
-      color: var(--gray-900);
-    }
-    .clock-separator {
-      animation: blink 1s step-end infinite;
-      margin: 0 2px;
-    }
-    @keyframes blink { 50% { opacity: 0; } }
-    .clock-seconds {
-      font-size: .45em; color: var(--gray-400);
-      align-self: flex-end; margin-bottom: .3em; margin-left: 4px;
-    }
-
-    .clock-status {
-      margin-top: 1rem;
-      padding: 1rem 1.5rem;
-      border-radius: 14px;
-      display: flex; align-items: center; gap: .75rem;
-      font-weight: 600; font-size: .95rem;
-    }
-    .clock-status.status-active {
-      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-      color: var(--green-600);
-    }
-    .clock-status.status-soon {
-      background: linear-gradient(135deg, #fffbeb, #fef3c7);
-      color: var(--amber-600);
-    }
-    .clock-status.status-off {
-      background: var(--gray-100);
-      color: var(--gray-500);
-    }
-    .status-dot {
-      width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
-    }
-    .status-dot.green { background: var(--green-500); box-shadow: 0 0 8px rgba(34,197,94,.5); animation: pulse-green 2s infinite; }
-    .status-dot.amber { background: var(--amber-500); box-shadow: 0 0 8px rgba(245,158,11,.5); animation: pulse-amber 2s infinite; }
-    .status-dot.gray { background: var(--gray-400); }
-
-    @keyframes pulse-green { 0%,100% { box-shadow: 0 0 8px rgba(34,197,94,.5); } 50% { box-shadow: 0 0 16px rgba(34,197,94,.8); } }
-    @keyframes pulse-amber { 0%,100% { box-shadow: 0 0 8px rgba(245,158,11,.5); } 50% { box-shadow: 0 0 16px rgba(245,158,11,.8); } }
-
-    .progress-wrap {
-      margin-top: .75rem;
-      background: var(--gray-200);
-      border-radius: 50px;
-      height: 8px;
-      overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%;
-      border-radius: 50px;
-      background: linear-gradient(90deg, var(--green-400), var(--green-500));
-      transition: width 1s;
-    }
-    .progress-labels {
-      display: flex; justify-content: space-between;
-      font-size: .7rem; color: var(--gray-400); margin-top: 4px; font-weight: 500;
-    }
-    .status-sub { font-size: .8rem; font-weight: 400; opacity: .8; margin-top: 2px; }
-
-    /* ===== INFO CARDS ===== */
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin: 2rem auto;
-      max-width: 1100px;
-      padding: 0 1rem;
-    }
-    .info-card {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem;
-      text-align: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,.06);
-      border: 1px solid var(--gray-200);
-      transition: transform .2s, box-shadow .2s;
-    }
-    .info-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,.1); }
-    .info-icon { font-size: 2rem; margin-bottom: .5rem; }
-    .info-label { font-size: .75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); font-weight: 600; }
-    .info-value { font-size: 1.3rem; font-weight: 700; color: var(--blue-700); margin-top: .25rem; }
-    .info-sub { font-size: .78rem; color: var(--gray-500); margin-top: .25rem; }
-
-    /* ===== TARIFAS ===== */
-    .section-title {
-      font-size: 1.5rem; font-weight: 800; text-align: center;
-      margin: 2.5rem 0 .5rem; color: var(--gray-800);
-    }
-    .section-subtitle {
-      text-align: center; color: var(--gray-500); font-size: .9rem; margin-bottom: 1.5rem;
-    }
-    .tariff-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem; max-width: 700px; margin: 0 auto 1rem;
-      padding: 0 1rem;
-    }
-    .tariff-card {
-      background: white; border-radius: 16px; padding: 1.5rem;
-      text-align: center; border: 2px solid var(--blue-100);
-      transition: all .2s;
-    }
-    .tariff-card:hover { border-color: var(--blue-400); transform: translateY(-2px); }
-    .tariff-card.highlight { border-color: var(--blue-500); background: var(--blue-50); }
-    .tariff-time { font-size: .85rem; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: .5px; }
-    .tariff-price { font-size: 2rem; font-weight: 800; color: var(--blue-700); margin: .5rem 0; }
-    .tariff-price span { font-size: 1rem; font-weight: 500; }
-    .tariff-note { font-size: .75rem; color: var(--gray-400); }
-    .tariff-footer {
-      text-align: center; font-size: .8rem; color: var(--gray-500);
-      background: var(--amber-50); border: 1px solid var(--amber-100);
-      border-radius: 10px; padding: .75rem 1rem; max-width: 500px; margin: 0 auto;
-    }
-
-    /* ===== MAP ===== */
-    .map-section { margin: 2.5rem auto; max-width: 1100px; padding: 0 1rem; }
-    .map-wrapper {
-      background: white; border-radius: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,.08);
-      overflow: hidden; border: 1px solid var(--gray-200);
-    }
-    .map-header {
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--gray-100);
-      display: flex; align-items: center; gap: .75rem;
-    }
-    .map-header h3 { font-size: 1.1rem; font-weight: 700; }
-    .map-header span { font-size: .8rem; color: var(--gray-500); }
-    #map { height: 450px; width: 100%; }
-    .map-legend {
-      padding: 1rem 1.5rem;
-      display: flex; flex-wrap: wrap; gap: .75rem;
-      border-top: 1px solid var(--gray-100);
-      background: var(--gray-50);
-    }
-    .legend-item {
-      display: flex; align-items: center; gap: .4rem;
-      font-size: .75rem; color: var(--gray-600); font-weight: 500;
-    }
-    .legend-line {
-      width: 20px; height: 4px; border-radius: 2px;
-    }
-    .legend-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-    }
-
-    /* Street pills */
-    .street-pills {
-      display: flex; flex-wrap: wrap; gap: .5rem;
-      padding: 1rem 1.5rem;
-      border-top: 1px solid var(--gray-100);
-      justify-content: center;
-    }
-    .street-pill {
-      padding: .4rem .9rem;
-      border-radius: 50px;
-      font-size: .75rem;
-      font-weight: 600;
-      border: 2px solid;
-      cursor: pointer;
-      transition: all .2s;
-      background: white;
-    }
-    .street-pill:hover { transform: scale(1.05); }
-    .street-pill.pill-active { color: white !important; }
-
-    /* ===== STREET CARDS ===== */
-    .streets-section { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
-    .streets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
-    .street-card {
-      background: white; border-radius: 16px;
-      border: 1px solid var(--gray-200);
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,.04);
-      transition: all .2s;
-    }
-    .street-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,.08); transform: translateY(-2px); }
-    .street-card-header {
-      padding: 1rem 1.25rem;
-      display: flex; align-items: center; gap: .75rem;
-      cursor: pointer;
-      user-select: none;
-    }
-    .street-num {
-      width: 32px; height: 32px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: .85rem; color: white; flex-shrink: 0;
-    }
-    .street-card-header h4 { font-size: .9rem; font-weight: 700; color: var(--gray-800); flex: 1; }
-    .street-toggle {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: var(--gray-100);
-      display: flex; align-items: center; justify-content: center;
-      font-size: .7rem; color: var(--gray-500);
-      transition: transform .3s;
-    }
-    .street-card.open .street-toggle { transform: rotate(180deg); }
-    .street-card-body {
-      max-height: 0; overflow: hidden;
-      transition: max-height .4s ease;
-    }
-    .street-card.open .street-card-body { max-height: 600px; }
-    .street-card-content {
-      padding: 0 1.25rem 1.25rem;
-      font-size: .85rem; color: var(--gray-600); line-height: 1.7;
-    }
-    .badge-row { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .75rem; }
-    .badge {
-      display: inline-flex; align-items: center; gap: .3rem;
-      padding: .25rem .65rem; border-radius: 50px;
-      font-size: .7rem; font-weight: 600;
-    }
-    .badge-blue { background: var(--blue-100); color: var(--blue-700); }
-    .badge-amber { background: var(--amber-100); color: var(--amber-600); }
-    .badge-green { background: #d1fae5; color: var(--green-600); }
-    .badge-gray { background: var(--gray-100); color: var(--gray-600); }
-
-    /* ===== FOOTER ===== */
-    footer {
-      background: var(--gray-800); color: white;
-      text-align: center; padding: 2rem 1rem;
-      margin-top: 3rem;
-    }
-    footer p { font-size: .85rem; opacity: .7; }
-    footer .footer-brand { font-weight: 700; font-size: 1rem; opacity: 1; margin-bottom: .25rem; }
-
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 600px) {
-      .hero { padding: 2rem 1rem 2.5rem; }
-      .clock-inner { padding: 1rem 1.25rem; }
-      #map { height: 320px; }
-      .streets-grid { grid-template-columns: 1fr; }
-      .info-grid { grid-template-columns: 1fr 1fr; }
-      .tariff-grid { grid-template-columns: 1fr; }
-    }
-
-    /* Leaflet popup custom */
-    .leaflet-popup-content-wrapper {
-      border-radius: 12px !important;
-      box-shadow: 0 8px 30px rgba(0,0,0,.15) !important;
-    }
-    .leaflet-popup-content { margin: 10px 14px !important; font-family: 'Inter', sans-serif !important; }
-    .popup-title { font-weight: 700; font-size: .9rem; color: var(--gray-800); margin-bottom: 4px; }
-    .popup-info { font-size: .78rem; color: var(--gray-500); }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZONA AZUL · LLANES · SEMANA SANTA 2025</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #00d4ff;
+    --blue-dim: #0099bb;
+    --blue-dark: #003344;
+    --accent: #00ffcc;
+    --warn: #ff6b35;
+    --bg: #020c14;
+    --bg2: #041825;
+    --bg3: #061e2e;
+    --text: #cce8f0;
+    --text-dim: #5a8a9a;
+    --grid: rgba(0,212,255,0.06);
+  }
+ 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  html { scroll-behavior: smooth; }
+ 
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+ 
+  /* SCANLINES OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+ 
+  /* HEADER */
+  header {
+    position: relative;
+    text-align: center;
+    padding: 60px 20px 40px;
+    border-bottom: 1px solid rgba(0,212,255,0.2);
+    background: linear-gradient(180deg, rgba(0,60,90,0.5) 0%, transparent 100%);
+    overflow: hidden;
+  }
+ 
+  header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,212,255,0.15), transparent);
+  }
+ 
+  .badge {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 4px 16px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    animation: pulse-border 2s ease-in-out infinite;
+  }
+ 
+  @keyframes pulse-border {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,204,0.4); }
+    50% { box-shadow: 0 0 12px 4px rgba(0,255,204,0.2); }
+  }
+ 
+  h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2rem, 6vw, 4.5rem);
+    font-weight: 900;
+    line-height: 1;
+    color: #fff;
+    text-shadow: 0 0 40px rgba(0,212,255,0.8), 0 0 80px rgba(0,212,255,0.3);
+    letter-spacing: 0.06em;
+    animation: flicker 6s infinite;
+  }
+ 
+  @keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.85; }
+    97% { opacity: 1; }
+    98% { opacity: 0.9; }
+  }
+ 
+  .subtitle {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(0.8rem, 2vw, 1.1rem);
+    font-weight: 400;
+    color: var(--blue);
+    letter-spacing: 0.3em;
+    margin-top: 10px;
+    text-transform: uppercase;
+  }
+ 
+  .header-line {
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--blue), transparent);
+    margin: 24px auto;
+  }
+ 
+  .header-desc {
+    max-width: 700px;
+    margin: 0 auto;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-dim);
+    font-weight: 300;
+  }
+ 
+  /* MAIN CONTENT */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+ 
+  /* INFO GRID */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 50px;
+  }
+ 
+  .info-card {
+    background: var(--bg2);
+    border: 1px solid rgba(0,212,255,0.2);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+    animation: card-in 0.6s ease both;
+  }
+ 
+  .info-card:nth-child(1) { animation-delay: 0.1s; }
+  .info-card:nth-child(2) { animation-delay: 0.2s; }
+  .info-card:nth-child(3) { animation-delay: 0.3s; }
+ 
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+ 
+  .info-card:hover {
+    border-color: var(--blue);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0,212,255,0.15);
+  }
+ 
+  .info-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue), transparent);
+  }
+ 
+  .info-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 60px; height: 60px;
+    background: radial-gradient(circle at 0% 0%, rgba(0,212,255,0.12), transparent);
+  }
+ 
+  .card-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 0 8px var(--blue));
+  }
+ 
+  .card-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: var(--blue);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+ 
+  .card-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.4;
+  }
+ 
+  .card-sub {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+ 
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.4em;
+    color: var(--blue);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+ 
+  .section-title::before, .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(0,212,255,0.5), transparent);
+  }
+ 
+  .section-title::after {
+    background: linear-gradient(270deg, rgba(0,212,255,0.5), transparent);
+  }
+ 
+  /* TARIFAS */
+  .tarifas-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 50px;
+  }
+ 
+  @media (max-width: 600px) {
+    .tarifas-grid { grid-template-columns: 1fr; }
+  }
+ 
+  .tarifa-card {
+    background: var(--bg3);
+    border: 1px solid rgba(0,212,255,0.15);
+    padding: 28px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+ 
+  .tarifa-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 30px rgba(0,255,204,0.12);
+  }
+ 
+  .tarifa-time {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+ 
+  .tarifa-price {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(0,255,204,0.5);
+    line-height: 1;
+  }
+ 
+  .tarifa-unit {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+ 
+  .tarifa-card.highlight {
+    border-color: rgba(0,255,204,0.4);
+    background: rgba(0,255,204,0.04);
+  }
+ 
+  .tarifa-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    color: var(--warn);
+    border: 1px solid var(--warn);
+    padding: 2px 8px;
+  }
+ 
+  /* CALLES */
+  .calles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 50px;
+  }
+ 
+  .calle-item {
+    background: var(--bg2);
+    border: 1px solid rgba(0,212,255,0.12);
+    border-left: 3px solid var(--blue);
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 20px;
+    align-items: start;
+    transition: all 0.3s;
+    animation: slide-in 0.5s ease both;
+  }
+ 
+  .calle-item:nth-child(even) { border-left-color: var(--accent); }
+  .calle-item:nth-child(1) { animation-delay: 0.1s; }
+  .calle-item:nth-child(2) { animation-delay: 0.15s; }
+  .calle-item:nth-child(3) { animation-delay: 0.2s; }
+  .calle-item:nth-child(4) { animation-delay: 0.25s; }
+  .calle-item:nth-child(5) { animation-delay: 0.3s; }
+  .calle-item:nth-child(6) { animation-delay: 0.35s; }
+  .calle-item:nth-child(7) { animation-delay: 0.4s; }
+  .calle-item:nth-child(8) { animation-delay: 0.45s; }
+ 
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(-15px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+ 
+  .calle-item:hover {
+    background: rgba(0,212,255,0.05);
+    border-left-width: 5px;
+  }
+ 
+  .calle-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--blue);
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.3);
+    width: 32px; height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+ 
+  .calle-item:nth-child(even) .calle-num {
+    color: var(--accent);
+    background: rgba(0,255,204,0.1);
+    border-color: rgba(0,255,204,0.3);
+  }
+ 
+  .calle-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+ 
+  .calle-desc {
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: var(--text-dim);
+    font-weight: 300;
+  }
+ 
+  .tag {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    padding: 2px 8px;
+    margin: 4px 4px 4px 0;
+    border-radius: 0;
+  }
+ 
+  .tag-carga {
+    color: var(--warn);
+    border: 1px solid rgba(255,107,53,0.5);
+    background: rgba(255,107,53,0.08);
+  }
+ 
+  .tag-minusvalidos {
+    color: var(--accent);
+    border: 1px solid rgba(0,255,204,0.5);
+    background: rgba(0,255,204,0.08);
+  }
+ 
+  /* NOTA */
+  .nota-box {
+    background: rgba(255,107,53,0.07);
+    border: 1px solid rgba(255,107,53,0.3);
+    border-left: 3px solid var(--warn);
+    padding: 20px 24px;
+    margin-bottom: 50px;
+    display: flex;
+    gap: 16px;
+    align-items: start;
+  }
+ 
+  .nota-icon { font-size: 1.3rem; flex-shrink: 0; }
+ 
+  .nota-text {
+    font-size: 0.88rem;
+    color: rgba(255,200,170,0.85);
+    line-height: 1.7;
+  }
+ 
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    border-top: 1px solid rgba(0,212,255,0.15);
+    position: relative;
+  }
+ 
+  footer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 300px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--blue), transparent);
+  }
+ 
+  .footer-brand {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--blue);
+    text-shadow: 0 0 10px rgba(0,212,255,0.5);
+    margin-bottom: 6px;
+  }
+ 
+  .footer-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+  }
+ 
+  /* CORNER DECORATIONS */
+  .corner-deco {
+    position: fixed;
+    width: 60px; height: 60px;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .corner-deco.tl { top: 16px; left: 16px; border-top: 2px solid var(--blue); border-left: 2px solid var(--blue); }
+  .corner-deco.tr { top: 16px; right: 16px; border-top: 2px solid var(--blue); border-right: 2px solid var(--blue); }
+  .corner-deco.bl { bottom: 16px; left: 16px; border-bottom: 2px solid var(--blue); border-left: 2px solid var(--blue); }
+  .corner-deco.br { bottom: 16px; right: 16px; border-bottom: 2px solid var(--blue); border-right: 2px solid var(--blue); }
+ 
+  @media (max-width: 500px) {
+    .corner-deco { display: none; }
+    .calle-item { grid-template-columns: 1fr; }
+    .calle-num { display: none; }
+  }
+ 
+  /* ── RELOJ + BARRA DE PROGRESO ── */
+  .clock-panel {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 0;
+  }
+ 
+  .clock-widget {
+    background: var(--bg2);
+    border: 1px solid rgba(0,212,255,0.25);
+    padding: 28px 32px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+ 
+  .clock-widget::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue), var(--accent), transparent);
+  }
+ 
+  /* Fila superior: reloj + estado */
+  .clock-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+ 
+  .clock-display {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+ 
+  #clock-time {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2.4rem, 6vw, 3.8rem);
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 30px rgba(0,212,255,0.9), 0 0 60px rgba(0,212,255,0.4);
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+ 
+  #clock-seconds {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    font-weight: 700;
+    color: var(--blue-dim);
+    letter-spacing: 0.05em;
+    line-height: 1;
+    align-self: flex-end;
+    margin-bottom: 4px;
+  }
+ 
+  .clock-date {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+ 
+  /* Estado activo/inactivo */
+  .status-badge {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    padding: 10px 20px;
+    border: 2px solid;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.5s;
+  }
+ 
+  .status-badge.active {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(0,255,204,0.08);
+    box-shadow: 0 0 20px rgba(0,255,204,0.2);
+  }
+ 
+  .status-badge.inactive {
+    color: var(--text-dim);
+    border-color: rgba(90,138,154,0.4);
+    background: rgba(90,138,154,0.05);
+  }
+ 
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+ 
+  .status-badge.active .status-dot {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: blink-dot 1.2s ease-in-out infinite;
+  }
+ 
+  .status-badge.inactive .status-dot {
+    background: var(--text-dim);
+  }
+ 
+  @keyframes blink-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+ 
+  /* Barra de progreso */
+  .progress-section { width: 100%; }
+ 
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+ 
+  .progress-label-txt {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+ 
+  .progress-pct {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--blue);
+  }
+ 
+  .progress-track {
+    width: 100%;
+    height: 14px;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.2);
+    position: relative;
+    overflow: hidden;
+  }
+ 
+  /* marcas de hora dentro del track */
+  .progress-track::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent calc(9.09% - 1px),
+      rgba(0,212,255,0.15) calc(9.09% - 1px),
+      rgba(0,212,255,0.15) 9.09%
+    );
+    z-index: 1;
+  }
+ 
+  #progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue-dark), var(--blue), var(--accent));
+    transition: width 1s linear;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 0 12px rgba(0,212,255,0.6);
+  }
+ 
+  #progress-bar::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: #fff;
+    box-shadow: 0 0 8px #fff, 0 0 16px var(--blue);
+  }
+ 
+  /* barra fuera de horario */
+  #progress-bar.off {
+    background: linear-gradient(90deg, rgba(90,138,154,0.3), rgba(90,138,154,0.5));
+    box-shadow: none;
+  }
+  #progress-bar.off::after { display: none; }
+ 
+  .progress-time-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+ 
+  .progress-time-lbl {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+  }
+ 
+  /* tiempo restante */
+  .remaining-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+ 
+  .remaining-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.25em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+ 
+  #remaining-time {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--blue);
+  }
+ 
+  #remaining-time.warn { color: var(--warn); text-shadow: 0 0 10px rgba(255,107,53,0.6); }
+  #remaining-time.off  { color: var(--text-dim); }
+</style>
 </head>
 <body>
-
-  <!-- HERO -->
-  <header class="hero">
-    <div class="hero-badge">🅿️ Ayuntamiento de Llanes</div>
-    <h1>Zona Azul de Aparcamiento</h1>
-    <p>Regulación especial de estacionamiento durante la Semana Santa 2025 en la villa de Llanes, Asturias</p>
-  </header>
-
-  <!-- RELOJ DIGITAL -->
-  <section class="clock-section">
-    <div class="clock-card" id="clockCard">
-      <div class="clock-inner">
-        <div class="clock-date" id="clockDate"></div>
+ 
+<div class="corner-deco tl"></div>
+<div class="corner-deco tr"></div>
+<div class="corner-deco bl"></div>
+<div class="corner-deco br"></div>
+ 
+<header>
+  <div class="badge">⬡ Ayuntamiento de Llanes · Aviso Oficial</div>
+  <h1>ZONA AZUL</h1>
+  <div class="subtitle">Regulación de Aparcamiento · Semana Santa</div>
+  <div class="header-line"></div>
+  <p class="header-desc">
+    El Ayuntamiento de Llanes establece la zona azul de aparcamiento para la próxima Semana Santa en las mismas vías que el pasado año.
+  </p>
+</header>
+ 
+<!-- RELOJ Y BARRA DE PROGRESO -->
+<div class="clock-panel">
+  <div class="clock-widget">
+ 
+    <div class="clock-top">
+      <div>
         <div class="clock-display">
-          <span id="clockH">00</span>
-          <span class="clock-separator">:</span>
-          <span id="clockM">00</span>
-          <span class="clock-seconds" id="clockS">00</span>
+          <div id="clock-time">00:00</div>
+          <div id="clock-seconds">:00</div>
         </div>
-        <div class="clock-status" id="clockStatus">
-          <div class="status-dot gray"></div>
-          <div>
-            <div id="statusText">Calculando...</div>
-            <div class="status-sub" id="statusSub"></div>
-          </div>
-        </div>
-        <div id="progressWrap" class="progress-wrap" style="display:none;">
-          <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <div id="progressLabels" class="progress-labels" style="display:none;">
-          <span>9:00</span><span>20:00</span>
-        </div>
+        <div class="clock-date" id="clock-date">—</div>
+      </div>
+      <div class="status-badge inactive" id="status-badge">
+        <span class="status-dot"></span>
+        <span id="status-text">ZONA INACTIVA</span>
       </div>
     </div>
-  </section>
-
+ 
+    <div class="progress-section">
+      <div class="progress-labels">
+        <span class="progress-label-txt">Progreso horario de pago · 09:00 → 20:00</span>
+        <span class="progress-pct" id="progress-pct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div id="progress-bar" class="off" style="width:0%"></div>
+      </div>
+      <div class="progress-time-row">
+        <span class="progress-time-lbl">09:00</span>
+        <span class="progress-time-lbl">11:45</span>
+        <span class="progress-time-lbl">14:30</span>
+        <span class="progress-time-lbl">17:15</span>
+        <span class="progress-time-lbl">20:00</span>
+      </div>
+    </div>
+ 
+    <div class="remaining-row">
+      <span class="remaining-label">Tiempo restante zona azul:</span>
+      <span id="remaining-time" class="off">—</span>
+    </div>
+ 
+  </div>
+</div>
+ 
+<main>
+ 
   <!-- INFO CARDS -->
-  <div class="info-grid container">
+  <div class="info-grid">
     <div class="info-card">
-      <div class="info-icon">📅</div>
-      <div class="info-label">Fechas</div>
-      <div class="info-value">27 mar – 6 abr</div>
-      <div class="info-sub">Viernes a lunes, ambos inclusive</div>
+      <div class="card-icon">📅</div>
+      <div class="card-label">Periodo de activación</div>
+      <div class="card-value">27 Mar — 6 Abr</div>
+      <div class="card-sub">Viernes a Lunes, ambos inclusive</div>
     </div>
     <div class="info-card">
-      <div class="info-icon">🕐</div>
-      <div class="info-label">Horario</div>
-      <div class="info-value">9:00 – 20:00 h</div>
-      <div class="info-sub">Todos los días del periodo</div>
+      <div class="card-icon">🕘</div>
+      <div class="card-label">Horario operativo</div>
+      <div class="card-value">09:00 — 20:00 h</div>
+      <div class="card-sub">Todos los días del periodo</div>
     </div>
     <div class="info-card">
-      <div class="info-icon">💶</div>
-      <div class="info-label">Desde</div>
-      <div class="info-value">0,60 €</div>
-      <div class="info-sub">1 hora de estacionamiento</div>
-    </div>
-    <div class="info-card">
-      <div class="info-icon">🚗</div>
-      <div class="info-label">Calles</div>
-      <div class="info-value">8 vías</div>
-      <div class="info-sub">Reguladas con zona azul</div>
+      <div class="card-icon">🚗</div>
+      <div class="card-label">Tiempo máximo</div>
+      <div class="card-value">2 horas</div>
+      <div class="card-sub">Desde el primer minuto de estacionamiento</div>
     </div>
   </div>
-
+ 
   <!-- TARIFAS -->
-  <h2 class="section-title">💰 Tarifas de Estacionamiento</h2>
-  <p class="section-subtitle">Precios aplicables durante el periodo de zona azul</p>
-  <div class="tariff-grid">
-    <div class="tariff-card">
-      <div class="tariff-time">1 hora</div>
-      <div class="tariff-price">0,60 <span>€</span></div>
-      <div class="tariff-note">Tarifa básica</div>
+  <div class="section-title">Tarifas de Aparcamiento</div>
+  <div class="tarifas-grid">
+    <div class="tarifa-card">
+      <div class="tarifa-time">1 hora</div>
+      <div class="tarifa-price">0,60</div>
+      <div class="tarifa-unit">euros</div>
     </div>
-    <div class="tariff-card">
-      <div class="tariff-time">1 h 30 min</div>
-      <div class="tariff-price">0,90 <span>€</span></div>
-      <div class="tariff-note">Tarifa media</div>
+    <div class="tarifa-card">
+      <div class="tarifa-time">1 hora 30 min</div>
+      <div class="tarifa-price">0,90</div>
+      <div class="tarifa-unit">euros</div>
     </div>
-    <div class="tariff-card highlight">
-      <div class="tariff-time">2 horas (máx.)</div>
-      <div class="tariff-price">1,20 <span>€</span></div>
-      <div class="tariff-note">Tiempo máximo</div>
+    <div class="tarifa-card highlight">
+      <div class="tarifa-badge">MÁXIMO</div>
+      <div class="tarifa-time">2 horas</div>
+      <div class="tarifa-price">1,20</div>
+      <div class="tarifa-unit">euros</div>
     </div>
   </div>
-  <div class="tariff-footer">⏱️ La tarifa se computa desde el <strong>primer minuto</strong> de estacionamiento</div>
-
-  <!-- MAPA -->
-  <section class="map-section">
-    <h2 class="section-title">🗺️ Mapa de Zona Azul</h2>
-    <p class="section-subtitle">Haz clic en las calles o en los botones para explorar cada zona</p>
-    <div class="map-wrapper">
-      <div class="map-header">
-        <span style="font-size:1.5rem;">📍</span>
-        <div>
-          <h3>Calles con zona azul – Llanes</h3>
-          <span>Semana Santa 2025 · Callejero interactivo</span>
+ 
+  <div class="nota-box">
+    <div class="nota-icon">⚠</div>
+    <div class="nota-text">
+      <strong>Importante:</strong> La tarifa empieza a computarse desde el <em>primer minuto</em> del estacionamiento. El tiempo máximo de permanencia es de <strong>2 horas</strong>.
+    </div>
+  </div>
+ 
+  <!-- CALLES -->
+  <div class="section-title">Vías con Zona Azul</div>
+  <div class="calles-list">
+ 
+    <div class="calle-item">
+      <div class="calle-num">01</div>
+      <div>
+        <div class="calle-name">Calle Pidal</div>
+        <div class="calle-desc">
+          Dirección entrada a la villa. Aparcamientos en lado izquierdo. Desde la rotonda y el número 22 al número 16: aparcamiento en <strong>batería</strong>. Desde el número 14 al 10: aparcamiento en <strong>línea</strong>. Desde el número 10 hasta el cruce con c/ Cueto Bajo, c/ La Guía y c/ Las Barqueras:
+          <br><span class="tag tag-carga">⟳ Carga y descarga 8:00–15:00 h</span> (junto al edificio de Correos). Por la tarde, zona azul en línea.
         </div>
-      </div>
-      <div id="map"></div>
-      <div class="street-pills" id="streetPills"></div>
-      <div class="map-legend">
-        <div class="legend-item"><div class="legend-line" style="background:#3b82f6;"></div> Zona azul</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;border:2px solid white;box-shadow:0 0 3px rgba(0,0,0,.3);"></div> Parking</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div> Carga/descarga</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div> Plazas movilidad reducida</div>
       </div>
     </div>
-  </section>
-
-  <!-- CALLES -->
-  <section class="streets-section">
-    <h2 class="section-title">📋 Detalle por Calles</h2>
-    <p class="section-subtitle">Pulsa en cada calle para ver la información completa</p>
-    <div class="streets-grid" id="streetsGrid"></div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer>
-    <p class="footer-brand">🏛️ Ayuntamiento de Llanes</p>
-    <p>Regulación de zona azul · Semana Santa 2025</p>
-  </footer>
-
-  <!-- Root for Vite (unused visually) -->
-  <div id="root" style="display:none;"></div>
-  <script type="module" src="/src/main.tsx"></script>
-
-  <script>
-    // =============================
-    //  DATA
-    // =============================
-    const STREETS = [
-      {
-        name: "Calle Pidal",
-        color: "#3b82f6",
-        coords: [[43.42225,-4.75520],[43.42195,-4.75410],[43.42170,-4.75340],[43.42140,-4.75270]],
-        info: "Dirección entrada a la villa. Aparcamientos en lado izquierdo. Desde la rotonda y el nº 22 al nº 16 aparcamiento en batería; del nº 14 al 10 en línea. Del nº 10 hasta el cruce con c/ Cueto Bajo, c/ La Guía y c/ Las Barqueras: carga y descarga de 8:00 a 15:00 h (junto a Correos), por la tarde zona azul en línea.",
-        badges: ["🅿️ Batería + Línea", "🚚 Carga/Descarga"],
-        parking: "Batería (22-16) · Línea (14-10)"
-      },
-      {
-        name: "C/ Prolongación Las Barqueras",
-        color: "#8b5cf6",
-        coords: [[43.42140,-4.75270],[43.42120,-4.75230],[43.42095,-4.75180]],
-        info: "Zona semipeatonal. Aparcamientos en lado izquierdo, en línea junto a edificio con negocios: peluquería Félix y Estanco nº 2 (se excluye la plazoleta). Aparcamiento en línea desde el nº 1 hasta el cruce con c/ Marqués de Canillejas.",
-        badges: ["🅿️ Línea", "🚶 Semipeatonal"],
-        parking: "Línea"
-      },
-      {
-        name: "C/ José Enrique Rozas Guijarro",
-        color: "#ec4899",
-        coords: [[43.42140,-4.75270],[43.42150,-4.75210],[43.42158,-4.75160]],
-        info: "Aparcamiento en lado izquierdo. En batería desde el nº 1 hasta el cruce con c/ Colegio de la Encarnación. Zona de carga y descarga a la altura del nº 5, de 8:00 a 15:00 h; por la tarde zona azul.",
-        badges: ["🅿️ Batería", "🚚 Carga/Descarga"],
-        parking: "Batería"
-      },
-      {
-        name: "Calle Alfonso IX",
-        color: "#14b8a6",
-        coords: [[43.42158,-4.75160],[43.42175,-4.75100],[43.42188,-4.75050]],
-        info: "Aparcamiento en lado izquierdo en línea. Frente a la oficina de la Policía Local, reserva de aparcamiento para vehículos oficiales.",
-        badges: ["🅿️ Línea", "🚔 Vehículos oficiales"],
-        parking: "Línea"
-      },
-      {
-        name: "Calle Egidio Gavito",
-        color: "#f97316",
-        coords: [[43.42095,-4.75180],[43.42060,-4.75140],[43.42030,-4.75100]],
-        info: "Dirección salida de la villa. Aparcamiento en lado izquierdo en batería. Desde el nº 3 al nº 15.",
-        badges: ["🅿️ Batería"],
-        parking: "Batería (3-15)"
-      },
-      {
-        name: "Calle Román Romano",
-        color: "#ef4444",
-        coords: [[43.42030,-4.75100],[43.42050,-4.75040],[43.42070,-4.74990],[43.42095,-4.74940]],
-        info: "Aparcamiento en lado derecho en línea del nº 2 al 4. En lado izquierdo en batería en nº 1. Zona de carga y descarga de 8:00 a 15:00 h a la altura del nº 6 (junto a supermercado El Día), por la tarde zona azul en línea. Aparcamiento en línea en lado izquierdo del nº 3 al 11.",
-        badges: ["🅿️ Batería + Línea", "🚚 Carga/Descarga"],
-        parking: "Línea (2-4, 3-11) · Batería (1)"
-      },
-      {
-        name: "C/ Hermanas Franciscanas del Hospital",
-        color: "#06b6d4",
-        coords: [[43.42050,-4.75040],[43.42080,-4.75080],[43.42110,-4.75110]],
-        info: "Aparcamiento en batería en lado derecho entre el nº 2 y nº 6, y aparcamiento en línea al lado izquierdo a la altura del nº 4.",
-        badges: ["🅿️ Batería + Línea"],
-        parking: "Batería (2-6) · Línea (4)"
-      },
-      {
-        name: "Calle Veneranda Manzano",
-        color: "#84cc16",
-        coords: [[43.42110,-4.75110],[43.42095,-4.75060],[43.42070,-4.74990]],
-        info: "Aparcamiento en lado derecho en batería, desde el cruce de c/ Hermanas Franciscanas del Hospital hasta el cruce con c/ Román Romano. Reserva de 2 plazas para minusválidos.",
-        badges: ["🅿️ Batería", "♿ 2 plazas PMR"],
-        parking: "Batería"
-      }
-    ];
-
-    const START_DATE = new Date(2025, 2, 27); // March 27
-    const END_DATE = new Date(2025, 3, 6);    // April 6
-    const HOUR_START = 9;
-    const HOUR_END = 20;
-
-    // =============================
-    //  DIGITAL CLOCK
-    // =============================
-    const DAYS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-    const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-
-    function pad(n) { return n.toString().padStart(2, '0'); }
-
-    function updateClock() {
-      const now = new Date();
-      document.getElementById('clockH').textContent = pad(now.getHours());
-      document.getElementById('clockM').textContent = pad(now.getMinutes());
-      document.getElementById('clockS').textContent = pad(now.getSeconds());
-      document.getElementById('clockDate').textContent =
-        `${DAYS[now.getDay()]}, ${now.getDate()} de ${MONTHS[now.getMonth()]} de ${now.getFullYear()}`;
-
-      updateStatus(now);
-    }
-
-    function updateStatus(now) {
-      const card = document.getElementById('clockCard');
-      const statusEl = document.getElementById('clockStatus');
-      const statusText = document.getElementById('statusText');
-      const statusSub = document.getElementById('statusSub');
-      const progressWrap = document.getElementById('progressWrap');
-      const progressBar = document.getElementById('progressBar');
-      const progressLabels = document.getElementById('progressLabels');
-      const dot = statusEl.querySelector('.status-dot');
-
-      const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const startDate = new Date(START_DATE);
-      const endDate = new Date(END_DATE);
-      const h = now.getHours();
-      const m = now.getMinutes();
-      const currentMinutes = h * 60 + m;
-
-      const inDateRange = todayDate >= startDate && todayDate <= endDate;
-      const inHourRange = currentMinutes >= HOUR_START * 60 && currentMinutes < HOUR_END * 60;
-      const minutesToStart = HOUR_START * 60 - currentMinutes;
-
-      card.className = 'clock-card';
-      dot.className = 'status-dot';
-
-      if (inDateRange && inHourRange) {
-        // ACTIVE
-        card.classList.add('active');
-        statusEl.className = 'clock-status status-active';
-        dot.classList.add('green');
-        statusText.textContent = '🟢 Zona azul ACTIVA';
-        const remaining = HOUR_END * 60 - currentMinutes;
-        const rh = Math.floor(remaining / 60);
-        const rm = remaining % 60;
-        statusSub.textContent = `Quedan ${rh}h ${pad(rm)}min hasta las 20:00`;
-        progressWrap.style.display = 'block';
-        progressLabels.style.display = 'flex';
-        const elapsed = currentMinutes - HOUR_START * 60;
-        const total = (HOUR_END - HOUR_START) * 60;
-        progressBar.style.width = ((elapsed / total) * 100) + '%';
-      } else if (inDateRange && !inHourRange && minutesToStart > 0 && minutesToStart <= 60) {
-        // SOON
-        card.classList.add('soon');
-        statusEl.className = 'clock-status status-soon';
-        dot.classList.add('amber');
-        statusText.textContent = '⏳ Zona azul PRÓXIMAMENTE';
-        statusSub.textContent = `Comienza en ${minutesToStart} minutos (a las 9:00)`;
-        progressWrap.style.display = 'none';
-        progressLabels.style.display = 'none';
-      } else if (inDateRange && currentMinutes >= HOUR_END * 60) {
-        // Ended today
-        statusEl.className = 'clock-status status-off';
-        dot.classList.add('gray');
-        statusText.textContent = '⚪ Zona azul finalizada hoy';
-        statusSub.textContent = 'Mañana de nuevo de 9:00 a 20:00 h';
-        progressWrap.style.display = 'none';
-        progressLabels.style.display = 'none';
-      } else if (inDateRange && minutesToStart > 60) {
-        // Before hours
-        statusEl.className = 'clock-status status-off';
-        dot.classList.add('gray');
-        statusText.textContent = '⚪ Zona azul inactiva';
-        statusSub.textContent = 'Hoy activa de 9:00 a 20:00 h';
-        progressWrap.style.display = 'none';
-        progressLabels.style.display = 'none';
+ 
+    <div class="calle-item">
+      <div class="calle-num">02</div>
+      <div>
+        <div class="calle-name">Calle Prolongación Las Barqueras</div>
+        <div class="calle-desc">
+          Zona semipeatonal. Aparcamientos en lado izquierdo, en <strong>línea</strong> junto a edificio con negocios: peluquería Félix y Estanco n.º 2 (se excluye la plazoleta). Aparcamiento en línea desde el número 1 hasta el cruce con la c/ Marqués de Canillejas.
+        </div>
+      </div>
+    </div>
+ 
+    <div class="calle-item">
+      <div class="calle-num">03</div>
+      <div>
+        <div class="calle-name">Calle José Enrique Rozas Guijarro</div>
+        <div class="calle-desc">
+          Aparcamiento en lado izquierdo. En <strong>batería</strong> desde el número 1 hasta el cruce con la c/ Colegio de la Encarnación.
+          <br><span class="tag tag-carga">⟳ Carga y descarga 8:00–15:00 h</span> a la altura del número 5. Por la tarde, zona azul.
+        </div>
+      </div>
+    </div>
+ 
+    <div class="calle-item">
+      <div class="calle-num">04</div>
+      <div>
+        <div class="calle-name">Calle Alfonso IX</div>
+        <div class="calle-desc">
+          Aparcamiento en lado izquierdo en <strong>línea</strong>. Frente a la oficina de la Policía Local: reserva de aparcamiento para vehículos oficiales.
+        </div>
+      </div>
+    </div>
+ 
+    <div class="calle-item">
+      <div class="calle-num">05</div>
+      <div>
+        <div class="calle-name">Calle Egidio Gavito</div>
+        <div class="calle-desc">
+          Dirección salida de la villa. Aparcamiento en lado izquierdo en <strong>batería</strong>, desde el número 3 al número 15.
+        </div>
+      </div>
+    </div>
+ 
+    <div class="calle-item">
+      <div class="calle-num">06</div>
+      <div>
+        <div class="calle-name">Calle Román Romano</div>
+        <div class="calle-desc">
+          Aparcamiento en lado derecho en <strong>línea</strong> desde el número 2 al número 4. Igualmente aparcamiento en el lado izquierdo en <strong>batería</strong> en el número 1.
+          <br><span class="tag tag-carga">⟳ Carga y descarga 8:00–15:00 h</span> a la altura del número 6 (junto al supermercado El Día). Por la tarde, zona azul en línea. Aparcamiento en línea en el lado izquierdo desde el número 3 al 11.
+        </div>
+      </div>
+    </div>
+ 
+    <div class="calle-item">
+      <div class="calle-num">07</div>
+      <div>
+        <div class="calle-name">Calle Hermanas Franciscanas del Hospital</div>
+        <div class="calle-desc">
+          Aparcamiento en <strong>batería</strong> en lado derecho entre el número 2 y número 6. Aparcamiento en <strong>línea</strong> al lado izquierdo a la altura del número 4.
+        </div>
+      </div>
+    </div>
+ 
+    <div class="calle-item">
+      <div class="calle-num">08</div>
+      <div>
+        <div class="calle-name">Calle Veneranda Manzano</div>
+        <div class="calle-desc">
+          Aparcamiento en lado derecho en <strong>batería</strong>, desde el cruce de c/ Hermanas Franciscanas del Hospital hasta el cruce con la c/ Román Romano.
+          <br><span class="tag tag-minusvalidos">♿ 2 plazas reservadas para personas con discapacidad</span>
+        </div>
+      </div>
+    </div>
+ 
+  </div>
+ 
+</main>
+ 
+<footer>
+  <div class="footer-brand">WEB DE JAVI TJ</div>
+  <div class="footer-sub">Llanes · Asturias · España</div>
+</footer>
+ 
+<script>
+  const HORA_INICIO = 9;   // 09:00
+  const HORA_FIN   = 20;   // 20:00
+  const TOTAL_MINS = (HORA_FIN - HORA_INICIO) * 60; // 660 min
+ 
+  const DIAS_ES = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+ 
+  function pad(n){ return String(n).padStart(2,'0'); }
+ 
+  function fmtDuration(mins){
+    const h = Math.floor(mins/60);
+    const m = mins % 60;
+    if(h > 0) return h + ' h ' + pad(m) + ' min';
+    return m + ' min';
+  }
+ 
+  function tick(){
+    const now   = new Date();
+    const h     = now.getHours();
+    const m     = now.getMinutes();
+    const s     = now.getSeconds();
+ 
+    // Reloj
+    document.getElementById('clock-time').textContent    = pad(h) + ':' + pad(m);
+    document.getElementById('clock-seconds').textContent = ':' + pad(s);
+    document.getElementById('clock-date').textContent    =
+      DIAS_ES[now.getDay()] + ', ' + now.getDate() + ' de ' + MESES_ES[now.getMonth()] + ' de ' + now.getFullYear();
+ 
+    // ¿Estamos en horario de pago?
+    const minutosDesdeInicio = (h - HORA_INICIO) * 60 + m; // puede ser negativo
+    const enHorario = h >= HORA_INICIO && (h < HORA_FIN || (h === HORA_FIN && m === 0 && s === 0));
+ 
+    const badge    = document.getElementById('status-badge');
+    const statusTx = document.getElementById('status-text');
+    const bar      = document.getElementById('progress-bar');
+    const pct      = document.getElementById('progress-pct');
+    const remaining= document.getElementById('remaining-time');
+ 
+    if(enHorario){
+      // Porcentaje: incluimos los segundos para fluidez
+      const totalSecs     = TOTAL_MINS * 60;
+      const transcurridoSecs = minutosDesdeInicio * 60 + s;
+      const porcentaje    = Math.min(100, (transcurridoSecs / totalSecs) * 100);
+      const minsRestantes = TOTAL_MINS - minutosDesdeInicio - (s > 0 ? 1 : 0);
+ 
+      bar.style.width = porcentaje.toFixed(2) + '%';
+      bar.classList.remove('off');
+      pct.textContent = porcentaje.toFixed(1) + '%';
+ 
+      badge.className = 'status-badge active';
+      statusTx.textContent = 'ZONA ACTIVA';
+ 
+      remaining.className = minsRestantes <= 60 ? 'warn' : '';
+      remaining.textContent = fmtDuration(Math.max(0, minsRestantes));
+ 
+    } else {
+      bar.style.width = '0%';
+      bar.classList.add('off');
+      pct.textContent = '0%';
+ 
+      badge.className = 'status-badge inactive';
+ 
+      if(h < HORA_INICIO){
+        const minsParaAbrir = (HORA_INICIO - h - 1) * 60 + (60 - m);
+        statusTx.textContent = 'ZONA INACTIVA';
+        remaining.className = 'off';
+        remaining.textContent = 'Abre en ' + fmtDuration(minsParaAbrir);
       } else {
-        // Outside date range
-        statusEl.className = 'clock-status status-off';
-        dot.classList.add('gray');
-        if (todayDate < startDate) {
-          const diff = Math.ceil((startDate - todayDate) / (1000 * 60 * 60 * 24));
-          statusText.textContent = '⚪ Zona azul no activa';
-          statusSub.textContent = `Faltan ${diff} día${diff !== 1 ? 's' : ''} para el inicio (27 de marzo)`;
-        } else {
-          statusText.textContent = '⚪ Periodo de zona azul finalizado';
-          statusSub.textContent = 'El periodo finalizó el 6 de abril';
-        }
-        progressWrap.style.display = 'none';
-        progressLabels.style.display = 'none';
+        statusTx.textContent = 'ZONA CERRADA';
+        remaining.className = 'off';
+        remaining.textContent = 'Hasta las 09:00 h';
       }
     }
-
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // =============================
-    //  MAP
-    // =============================
-    const map = L.map('map', {
-      center: [43.4210, -4.7515],
-      zoom: 16,
-      zoomControl: true,
-      scrollWheelZoom: true
-    });
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
-    }).addTo(map);
-
-    const polylines = [];
-    const markers = [];
-
-    STREETS.forEach((street, i) => {
-      // Polyline
-      const poly = L.polyline(street.coords, {
-        color: street.color,
-        weight: 6,
-        opacity: 0.85,
-        lineCap: 'round',
-        lineJoin: 'round'
-      }).addTo(map);
-
-      poly.bindPopup(`
-        <div class="popup-title" style="color:${street.color}">${street.name}</div>
-        <div class="popup-info">${street.parking}</div>
-      `);
-      polylines.push(poly);
-
-      // Marker at midpoint
-      const mid = street.coords[Math.floor(street.coords.length / 2)];
-      const icon = L.divIcon({
-        html: `<div style="
-          background:${street.color};
-          color:white;
-          width:28px;height:28px;
-          border-radius:8px;
-          display:flex;align-items:center;justify-content:center;
-          font-weight:800;font-size:12px;
-          font-family:'Inter',sans-serif;
-          border:2px solid white;
-          box-shadow:0 2px 8px rgba(0,0,0,.3);
-        ">P</div>`,
-        className: '',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
-      });
-      const marker = L.marker(mid, { icon }).addTo(map);
-      marker.bindPopup(`
-        <div class="popup-title" style="color:${street.color}">${street.name}</div>
-        <div class="popup-info">${street.parking}</div>
-      `);
-      markers.push(marker);
-    });
-
-    // Street pills
-    const pillsContainer = document.getElementById('streetPills');
-    STREETS.forEach((street, i) => {
-      const pill = document.createElement('button');
-      pill.className = 'street-pill';
-      pill.style.borderColor = street.color;
-      pill.style.color = street.color;
-      pill.textContent = street.name.replace(/^(Calle |C\/ )/, '');
-      pill.addEventListener('click', () => {
-        // Remove active from all
-        document.querySelectorAll('.street-pill').forEach(p => {
-          p.classList.remove('pill-active');
-          p.style.background = 'white';
-        });
-        pill.classList.add('pill-active');
-        pill.style.background = street.color;
-
-        // Highlight polyline
-        polylines.forEach((p, j) => {
-          p.setStyle({ weight: j === i ? 9 : 4, opacity: j === i ? 1 : 0.35 });
-        });
-
-        map.fitBounds(polylines[i].getBounds(), { padding: [60, 60], maxZoom: 17 });
-        markers[i].openPopup();
-
-        // Reset after 4s
-        setTimeout(() => {
-          polylines.forEach(p => p.setStyle({ weight: 6, opacity: 0.85 }));
-          pill.classList.remove('pill-active');
-          pill.style.background = 'white';
-        }, 4000);
-      });
-      pillsContainer.appendChild(pill);
-    });
-
-    // =============================
-    //  STREET CARDS
-    // =============================
-    const grid = document.getElementById('streetsGrid');
-    STREETS.forEach((street, i) => {
-      const card = document.createElement('div');
-      card.className = 'street-card';
-      card.innerHTML = `
-        <div class="street-card-header" onclick="this.parentElement.classList.toggle('open')">
-          <div class="street-num" style="background:${street.color}">${i + 1}</div>
-          <h4>${street.name}</h4>
-          <div class="street-toggle">▼</div>
-        </div>
-        <div class="street-card-body">
-          <div class="street-card-content">
-            ${street.info}
-            <div class="badge-row">
-              ${street.badges.map(b => {
-                let cls = 'badge-blue';
-                if (b.includes('Carga')) cls = 'badge-amber';
-                if (b.includes('PMR') || b.includes('♿')) cls = 'badge-green';
-                if (b.includes('oficiales') || b.includes('🚔')) cls = 'badge-gray';
-                if (b.includes('Semipeatonal') || b.includes('🚶')) cls = 'badge-gray';
-                return `<span class="badge ${cls}">${b}</span>`;
-              }).join('')}
-            </div>
-          </div>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-  </script>
+  }
+ 
+  tick();
+  setInterval(tick, 1000);
+</script>
 </body>
 </html>
